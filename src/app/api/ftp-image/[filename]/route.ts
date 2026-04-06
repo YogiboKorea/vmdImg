@@ -29,7 +29,7 @@ export async function GET(
     };
     const contentType = mimeMap[ext] ?? 'application/octet-stream';
 
-    return new NextResponse(buffer, {
+    return new NextResponse(buffer as any, {
       status: 200,
       headers: {
         'Content-Type': contentType,
