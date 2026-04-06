@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ExcelUploader from '@/components/ExcelUploader';
 import { ProductData, IMAGE_SPECS } from '@/types/product';
+import JSZip from 'jszip';
 
 import { TypeAPreview, TypeBPreview } from '@/components/ImagePreviews';
 
@@ -107,6 +108,7 @@ export default function HomePage() {
     setDownloading(type);
     try {
       const spec = IMAGE_SPECS[type];
+      const zip = new JSZip();
 
       for (const product of currentProducts) {
         const res = await fetch('/api/generate-vmd', {
@@ -120,25 +122,28 @@ export default function HomePage() {
         }
 
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${product.name}_${product.discountRate}%할인_${type}타입_${spec.width}x${spec.height}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        await new Promise(r => setTimeout(r, 500));
+        const filename = `${product.name}_${product.discountRate}%할인_${type}타입_${spec.width}x${spec.height}.png`;
+        zip.file(filename, blob);
       }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${currentName}_${type}타입_이미지모음.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
     } catch (err) {
       console.error('Download error:', err);
-      alert('이미지 생성에 실패했습니다.');
+      alert('이미지 생성에 다운로드 혹은 압축 중 오류가 발생했습니다.');
     } finally {
       setDownloading(null);
     }
-  }, [currentProducts]);
+  }, [currentProducts, currentName]);
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--yogibo-bg)' }}>
