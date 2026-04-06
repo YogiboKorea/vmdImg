@@ -75,7 +75,7 @@ function formatPrice(n: number) {
  */
 const FONT = 'Pretendard';
 const TEXT_COLOR = '#474F57';
-const YELLOW = '#FDD835';
+const THUMB_BG = 'rgb(245, 245, 245)';
 
 function getSaleColor(rate: number): string {
   if (rate >= 20) return '#BE1D2C';
@@ -116,7 +116,7 @@ function Thumbnail({ product, height, baseUrl }: { product: ProductData; height:
     <div style={{
       display: 'flex', width: height, height,
       flexShrink: 0, flexGrow: 0,
-      position: 'relative', background: YELLOW, overflow: 'hidden',
+      position: 'relative', background: THUMB_BG, overflow: 'hidden',
       borderTopLeftRadius: 0, borderTopRightRadius: radius,
       borderBottomRightRadius: 0, borderBottomLeftRadius: 0,
     }}>
