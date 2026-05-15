@@ -30,7 +30,7 @@ function downloadTemplate() {
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '가격표');
-  XLSX.writeFile(wb, 'VMD_업로드_양식.xlsx');
+  XLSX.writeFile(wb, '가격표_업로드_양식.xlsx');
 }
 
 /** 컨테이너 ref의 실제 너비를 반환하는 hook */
@@ -298,7 +298,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-1.5px', color: '#111', fontFamily: 'Arial, sans-serif' }}>yogibo</span>
           <span style={{ width: 1, height: 20, background: '#ddd' }} />
-          <span style={{ fontSize: 14, color: '#666', fontWeight: 600 }}>VMD 이미지 자동생성기</span>
+          <span style={{ fontSize: 14, color: '#666', fontWeight: 600 }}>가격표 이미지 자동생성기</span>
         </div>
       </header>
 
