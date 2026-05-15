@@ -7,6 +7,7 @@ import JSZip from 'jszip';
 
 import { TypeAPreview, TypeBPreview, PriceCard } from '@/components/ImagePreviews';
 import Cafe24SearchModal from '@/components/Cafe24SearchModal';
+import UsageGuide from '@/components/UsageGuide';
 import { lookupManyByName } from '@/lib/cafe24Lookup';
 
 /** 컨테이너 ref의 실제 너비를 반환하는 hook */
@@ -279,6 +280,8 @@ export default function HomePage() {
       </header>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px', display: 'flex', flexDirection: 'column', gap: 32, background: '#f4f4f4', minHeight: '100vh' }}>
+
+        <UsageGuide />
 
         <section style={{ background: 'white', borderRadius: 20, padding: 32, border: '1px solid #eee' }}>
           <div style={{ marginBottom: 20 }}>

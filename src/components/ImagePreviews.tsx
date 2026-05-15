@@ -53,8 +53,8 @@ const COLOR_MAP: Record<string, string> = {
 
 // 이미지 기반 컬러칩 — cafe24 의 /web/img/goods/color_chip/{이름}.png 사용.
 // 솔리드 컬러 (#xxx) 가 아니라 이미지 자체를 chip 으로 표시 (스퀴지보·메이트·롤메이트 캐릭터 시리즈).
-const IMAGE_CHIP_BASE = 'https://yogibo.openhost.cafe24.com/web/img/goods/color_chip';
-const IMAGE_CHIP_NAMES: string[] = [
+export const IMAGE_CHIP_BASE = 'https://yogibo.openhost.cafe24.com/web/img/goods/color_chip';
+export const IMAGE_CHIP_NAMES: string[] = [
   // 스퀴지보 하트
   '스퀴지보_하트_브라이트 퍼플',
   '스퀴지보_하트_로즈핑크',
