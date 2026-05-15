@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { TypeAPreview, TypeBPreview } from '@/components/ImagePreviews';
+import { PriceCard } from '@/components/ImagePreviews';
 import sharp from 'sharp';
 
 /*
@@ -79,10 +79,17 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { product, type } = await req.json();
+    const body = await req.json();
+    const { product, type } = body;
 
-    const width = 1984;
-    const height = type === 'A' ? 602 : 803;
+    // width/height 직접 지정 시 그대로 사용 (커스텀 사이즈).
+    // 미지정 시 type 기반 기본값.
+    const width = Number.isFinite(body.width) && body.width > 0
+      ? Math.round(body.width)
+      : 1984;
+    const height = Number.isFinite(body.height) && body.height > 0
+      ? Math.round(body.height)
+      : (type === 'A' ? 602 : 803);
 
     // ✅ 폰트 로드
     await loadFonts();
@@ -117,12 +124,23 @@ export async function POST(req: Request) {
       }
     };
 
-    const rawFileName = (product.thumbnailImage || '').trim().replace(/^\/+/, '');
-    const nameParts = rawFileName.split('.');
-    const ext = nameParts.pop();
-    const encodedFileName = nameParts.map((p: string) => encodeURIComponent(p)).join('.') + (ext ? `.${ext}` : '');
-
-    const thumbUrl = `https://yogibo.openhost.cafe24.com/web/vmd/${encodedFileName}`;
+    const rawThumb = (product.thumbnailImage || '').trim();
+    // data: URL (사용자가 모달에서 직접 업로드한 이미지) — 변환 없이 그대로 사용
+    const isThumbDataUrl = rawThumb.startsWith('data:');
+    let thumbUrl: string;
+    if (isThumbDataUrl) {
+      thumbUrl = rawThumb;
+    } else if (/^https?:\/\//i.test(rawThumb)) {
+      // Cafe24 lookup으로 들어온 절대 URL (detail_image / list_image)
+      thumbUrl = rawThumb;
+    } else {
+      // 기존 FTP 폴백: 상품명.jpg
+      const cleaned = rawThumb.replace(/^\/+/, '');
+      const nameParts = cleaned.split('.');
+      const ext = nameParts.pop();
+      const encodedFileName = nameParts.map((p: string) => encodeURIComponent(p)).join('.') + (ext ? `.${ext}` : '');
+      thumbUrl = `https://yogibo.openhost.cafe24.com/web/vmd/${encodedFileName}`;
+    }
     const logoUrl = "https://yogibo.openhost.cafe24.com/web/img/icon/logo3_on.png";
 
     const rate = product.discountRate || 0;
@@ -130,10 +148,11 @@ export async function POST(req: Request) {
     const exact = supported.find((r: number) => r === rate);
     const saleBadgeUrl = exact ? `https://yogibo.openhost.cafe24.com/web/vmd/${exact}.png` : null;
 
-    console.log('[VMD] 이미지 다운로드:', { thumbUrl, logoUrl, saleBadgeUrl });
+    console.log('[VMD] 이미지 다운로드:', { isThumbDataUrl, logoUrl, saleBadgeUrl });
 
     const results = await Promise.all([
-      fetchBase64(thumbUrl),
+      // data: URL 이면 fetch 불필요 — 그대로 전달 (이미 base64)
+      isThumbDataUrl ? Promise.resolve(thumbUrl) : fetchBase64(thumbUrl),
       fetchBase64(logoUrl),
       saleBadgeUrl ? fetchBase64(saleBadgeUrl) : Promise.resolve(null)
     ]);
@@ -147,9 +166,10 @@ export async function POST(req: Request) {
     const protocol = req.headers.get('x-forwarded-proto') || (req.url.startsWith('https') ? 'https' : 'http');
     const baseUrl = `${protocol}://${host}`;
 
-    const element = type === 'A'
-      ? <TypeAPreview product={product} baseUrl={baseUrl} />
-      : <TypeBPreview product={product} baseUrl={baseUrl} />;
+    // baseUrl 은 PriceCard 내부에서 직접 사용하지 않지만 향후 확장 대비 변수만 유지
+    void baseUrl;
+    const autoFit = body.autoFit === true;
+    const element = <PriceCard product={product} width={width} height={height} autoFit={autoFit} />;
 
     // ✅ 폰트 설정: Pretendard 전 weight
     const fontsConfig: any[] = [];
