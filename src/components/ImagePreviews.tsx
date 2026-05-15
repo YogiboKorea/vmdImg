@@ -217,13 +217,19 @@ function ThumbnailBlock({
     <div style={{
       position: 'absolute', left, top, width: size, height: size,
       display: 'flex', background: THUMB_BG, overflow: 'hidden',
-      borderTopLeftRadius: 0, borderTopRightRadius: radius,
-      borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
+      // satori 는 개별 border*Radius + 절대위치 자식 조합에서 클립이 안 됨.
+      // shorthand 로 작성해야 안정적으로 클리핑이 적용됨.
+      borderRadius: `0px ${radius}px 0px 0px`,
     }}>
       {thumbUrl && (
+        // 메인 썸네일 — flex child 로 두고 border-radius 를 자체에도 동일하게 적용해서
+        // satori 폴백 케이스에서도 visual 동일하게 보이도록 보강.
         // eslint-disable-next-line @next/next/no-img-element
         <img src={thumbUrl} alt={product.name}
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            borderRadius: `0px ${radius}px 0px 0px`,
+          }} />
       )}
       {logoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
