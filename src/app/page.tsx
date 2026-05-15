@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 import ExcelUploader from '@/components/ExcelUploader';
 import { ProductData, IMAGE_SPECS } from '@/types/product';
 import JSZip from 'jszip';
@@ -9,6 +10,28 @@ import { TypeAPreview, TypeBPreview, PriceCard } from '@/components/ImagePreview
 import Cafe24SearchModal from '@/components/Cafe24SearchModal';
 import UsageGuide from '@/components/UsageGuide';
 import { lookupManyByName } from '@/lib/cafe24Lookup';
+
+/** 업로드 양식 xlsx 생성·다운로드 — 헤더 + 예시 2행 */
+function downloadTemplate() {
+  const headers = ['상품명', '서브 타이틀', '상품 설명', '색상', '정상가', '할인가', '할인율(%)'];
+  const samples = [
+    ['냅', 'NAP / 인체공학 목베개', '목을 부드럽게 감싸주고 포근함을 더해주는\n스냅 버튼으로 고정이 가능', '로즈 핑크/스위트 오렌지/올리브 그린/아쿠아 블루', 34800, 34800, 0],
+    ['코지보', 'COZYBO / 사계절 담요', 'Yogibo만의 독자적인 섬유 엔지니어링 기술로 만들어진\n부드러운 소재감과 적당한 두께감의 사계절 담요', '체리 레드/아쿠아 블루/올리브 그린', 139000, 118150, 15],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...samples]);
+  ws['!cols'] = [
+    { width: 18 }, // 상품명
+    { width: 28 }, // 서브 타이틀
+    { width: 50 }, // 상품 설명
+    { width: 36 }, // 색상
+    { width: 12 }, // 정상가
+    { width: 12 }, // 할인가
+    { width: 10 }, // 할인율
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '가격표');
+  XLSX.writeFile(wb, 'VMD_업로드_양식.xlsx');
+}
 
 /** 컨테이너 ref의 실제 너비를 반환하는 hook */
 function useContainerWidth() {
@@ -284,14 +307,38 @@ export default function HomePage() {
         <UsageGuide />
 
         <section style={{ background: 'white', borderRadius: 20, padding: 32, border: '1px solid #eee' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h2 style={{ fontWeight: 800, fontSize: 16, color: '#111', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-              <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#E8192C', color: 'white', fontWeight: 900, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>
-              엑셀 파일 업로드
-            </h2>
-            <p style={{ marginTop: 6, marginLeft: 36, fontSize: 13, color: '#999' }}>
-              상품명 · 서브타이틀 · 상품설명 · 색상(슬래시구분) · 정상가 · 할인가 · 할인율(%) 순으로 작성된 xlsx 파일
-            </p>
+          <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={{ fontWeight: 800, fontSize: 16, color: '#111', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#E8192C', color: 'white', fontWeight: 900, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>
+                엑셀 파일 업로드
+              </h2>
+              <p style={{ marginTop: 6, marginLeft: 36, fontSize: 13, color: '#999' }}>
+                상품명 · 서브타이틀 · 상품설명 · 색상(슬래시구분) · 정상가 · 할인가 · 할인율(%) 순으로 작성된 xlsx 파일
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 18px', borderRadius: 10,
+                fontWeight: 700, fontSize: 13,
+                background: 'white', color: '#374151',
+                border: '1.5px solid #E5E7EB',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E8192C'; e.currentTarget.style.color = '#E8192C'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#374151'; }}
+              title="작성용 빈 양식 (헤더 + 예시 2행) 다운로드"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              양식 다운로드 (.xlsx)
+            </button>
           </div>
           <ExcelUploader onParsed={handleParsed} />
           {lookupProgress && (
