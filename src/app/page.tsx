@@ -6,7 +6,7 @@ import ExcelUploader from '@/components/ExcelUploader';
 import { ProductData, IMAGE_SPECS } from '@/types/product';
 import JSZip from 'jszip';
 
-import { TypeAPreview, TypeBPreview, PriceCard } from '@/components/ImagePreviews';
+import { TypeAPreview, TypeBPreview, PriceCardCustom } from '@/components/ImagePreviews';
 import Cafe24SearchModal from '@/components/Cafe24SearchModal';
 import UsageGuide from '@/components/UsageGuide';
 import { lookupManyByName } from '@/lib/cafe24Lookup';
@@ -188,7 +188,7 @@ export default function HomePage() {
   const runDownload = useCallback(async (params: {
     busyKey: string;
     zipName: string;
-    variants: { label: string; width: number; height: number; autoFit?: boolean }[];
+    variants: { label: string; width: number; height: number; autoFit?: boolean; type?: 'A' | 'B' }[];
     targetProducts?: ProductData[];
   }) => {
     const targets = params.targetProducts ?? currentProducts;
@@ -203,6 +203,7 @@ export default function HomePage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               product, width: variant.width, height: variant.height,
+              type: variant.type,
               autoFit: !!variant.autoFit,
             }),
           });
@@ -237,7 +238,7 @@ export default function HomePage() {
     return runDownload({
       busyKey: type,
       zipName: `${currentName}_${type}타입_이미지모음`,
-      variants: [{ label: `${type}타입`, width: spec.width, height: spec.height }],
+      variants: [{ label: `${type}타입`, width: spec.width, height: spec.height, type }],
     });
   }, [runDownload, currentName]);
 
@@ -246,8 +247,8 @@ export default function HomePage() {
       busyKey: 'ALL',
       zipName: `${currentName}_전체_AB타입_이미지모음`,
       variants: [
-        { label: 'A타입', width: IMAGE_SPECS.A.width, height: IMAGE_SPECS.A.height },
-        { label: 'B타입', width: IMAGE_SPECS.B.width, height: IMAGE_SPECS.B.height },
+        { label: 'A타입', width: IMAGE_SPECS.A.width, height: IMAGE_SPECS.A.height, type: 'A' },
+        { label: 'B타입', width: IMAGE_SPECS.B.width, height: IMAGE_SPECS.B.height, type: 'B' },
       ],
     });
   }, [runDownload, currentName]);
@@ -267,7 +268,7 @@ export default function HomePage() {
     return runDownload({
       busyKey: 'BULK_A',
       zipName: `전체상품_A타입_이미지모음`,
-      variants: [{ label: 'A타입', width: IMAGE_SPECS.A.width, height: IMAGE_SPECS.A.height }],
+      variants: [{ label: 'A타입', width: IMAGE_SPECS.A.width, height: IMAGE_SPECS.A.height, type: 'A' }],
       targetProducts: products,
     });
   }, [runDownload, products]);
@@ -276,7 +277,7 @@ export default function HomePage() {
     return runDownload({
       busyKey: 'BULK_B',
       zipName: `전체상품_B타입_이미지모음`,
-      variants: [{ label: 'B타입', width: IMAGE_SPECS.B.width, height: IMAGE_SPECS.B.height }],
+      variants: [{ label: 'B타입', width: IMAGE_SPECS.B.width, height: IMAGE_SPECS.B.height, type: 'B' }],
       targetProducts: products,
     });
   }, [runDownload, products]);
@@ -433,14 +434,14 @@ export default function HomePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <div>
                     <span style={{ fontWeight: 700, color: '#111' }}>A타입</span>
-                    <span style={{ marginLeft: 8, fontSize: 13, color: '#aaa' }}>1984 × 602 px</span>
+                    <span style={{ marginLeft: 8, fontSize: 13, color: '#aaa' }}>1984 × 803 px</span>
                   </div>
                   <DownloadButton id="download-a" label="A타입 다운로드" color="#E8192C" loading={downloading === 'A'} onClick={() => handleDownload('A')} />
                 </div>
                 <div style={{ background: '#fff' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
                     {currentProducts.map((prod, idx) => (
-                      <ScaledPreview key={idx} naturalWidth={1984} naturalHeight={602}>
+                      <ScaledPreview key={idx} naturalWidth={1984} naturalHeight={803}>
                         <TypeAPreview product={prod} />
                       </ScaledPreview>
                     ))}
@@ -452,14 +453,14 @@ export default function HomePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <div>
                     <span style={{ fontWeight: 700, color: '#111' }}>B타입</span>
-                    <span style={{ marginLeft: 8, fontSize: 13, color: '#aaa' }}>1984 × 803 px</span>
+                    <span style={{ marginLeft: 8, fontSize: 13, color: '#aaa' }}>1984 × 602 px</span>
                   </div>
                   <DownloadButton id="download-b" label="B타입 다운로드" color="#111827" loading={downloading === 'B'} onClick={() => handleDownload('B')} />
                 </div>
                 <div style={{ background: '#fff' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
                     {currentProducts.map((prod, idx) => (
-                      <ScaledPreview key={idx} naturalWidth={1984} naturalHeight={803}>
+                      <ScaledPreview key={idx} naturalWidth={1984} naturalHeight={602}>
                         <TypeBPreview product={prod} />
                       </ScaledPreview>
                     ))}
@@ -510,7 +511,7 @@ export default function HomePage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
                     {customW >= 100 && customH >= 100 && currentProducts.map((prod, idx) => (
                       <ScaledPreview key={idx} naturalWidth={customW} naturalHeight={customH}>
-                        <PriceCard product={prod} width={customW} height={customH} autoFit />
+                        <PriceCardCustom product={prod} width={customW} height={customH} />
                       </ScaledPreview>
                     ))}
                   </div>

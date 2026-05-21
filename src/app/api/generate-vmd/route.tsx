@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { PriceCard } from '@/components/ImagePreviews';
+import { TypeAPreview, TypeBPreview, PriceCardCustom } from '@/components/ImagePreviews';
 import sharp from 'sharp';
 
 /*
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       : 1984;
     const height = Number.isFinite(body.height) && body.height > 0
       ? Math.round(body.height)
-      : (type === 'A' ? 602 : 803);
+      : (type === 'A' ? 803 : 602);
 
     // ✅ 폰트 로드
     await loadFonts();
@@ -169,7 +169,23 @@ export async function POST(req: Request) {
     // baseUrl 은 PriceCard 내부에서 직접 사용하지 않지만 향후 확장 대비 변수만 유지
     void baseUrl;
     const autoFit = body.autoFit === true;
-    const element = <PriceCard product={product} width={width} height={height} autoFit={autoFit} />;
+
+    // type 미지정 시 width/height 로 추론 (구버전 클라이언트 호환)
+    let resolvedType: 'A' | 'B' | undefined = type;
+    if (!resolvedType && !autoFit) {
+      if (width === 1984 && height === 803) resolvedType = 'A';
+      else if (width === 1984 && height === 602) resolvedType = 'B';
+    }
+
+    // autoFit → 커스텀 사이즈로 PriceCardCustom (A타입 디자인 비례 축소)
+    // 그 외엔 resolvedType 기반으로 A/B 전용 렌더러, 어느 것도 매칭 안 되면 PriceCardCustom 폴백
+    const element = autoFit
+      ? <PriceCardCustom product={product} width={width} height={height} />
+      : resolvedType === 'A'
+        ? <TypeAPreview product={product} />
+        : resolvedType === 'B'
+          ? <TypeBPreview product={product} />
+          : <PriceCardCustom product={product} width={width} height={height} />;
 
     // ✅ 폰트 설정: Pretendard 전 weight
     const fontsConfig: any[] = [];

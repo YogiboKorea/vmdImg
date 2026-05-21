@@ -118,6 +118,9 @@ export const IMAGE_CHIP_NAMES: string[] = [
   '롤메이트_유니콘',
   '롤메이트_앨리게이터',
   '롤메이트_우파루파',
+  // 하트필로우
+  '하트필로우_체리레드',
+  '하트필로우_로즈핑크',
 ];
 
 function getColor(name: string): string {
@@ -173,8 +176,8 @@ function getProxyUrl(url: string) {
  * 모든 위치/사이즈는 이 값을 기준으로 캔버스 height 에 맞춰 스케일링.
  *   sx = canvasWidth  / 992   (가로)
  *   sy = canvasHeight / 402   (세로 = 사각형 요소 / 폰트 스케일)
- * A타입(1984×602): sx=2.0, sy=1.498
- * B타입(1984×803): sx=2.0, sy≈2.0  (Figma 그대로 2배)
+ * A타입(1984×803): sx=2.0, sy≈2.0  (Figma 그대로 2배)
+ * B타입(1984×602): sx=2.0, sy=1.498
  */
 const FIGMA = {
   W: 992, H: 402,
@@ -200,6 +203,135 @@ const FIGMA = {
   // SALE 배지
   badgeX: 862, badgeY: 0, badgeW: 110, badgeH: 95,
   badgeSaleSize: 27.3, badgeNumSize: 39.9, badgePctSize: 25,
+};
+
+// A타입 전용 스펙 — 실제 렌더 픽셀(1984×803) 기준, Figma 스케일링 무시.
+const A_TYPE_SPEC = {
+  // 대표이미지 (썸네일): 640×640, 좌측 패딩 60, 세로 중앙 정렬
+  thumbSize: 640,
+  thumbX: 60,
+  thumbY: 81, // (803 - 640) / 2
+  thumbToTextGap: 62, // 썸네일 우측 → 타이틀 좌측 간격
+  // 우측 텍스트 영역 y 시작 (썸네일과 독립)
+  textY: 140,
+  // 로고 (썸네일 좌하단 오버레이) — 썸네일 사이즈에 맞춰 비례
+  logoW: 188,
+  logoH: 75,
+  logoLeftInThumb: 38,
+  logoBottomInThumb: 19,
+  // 상품명 (타이틀)
+  titleSize: 92,
+  titleLineHeight: 92, // 100%
+  titleLetterSpacing: 'normal', // 0%
+  titleWeight: 800,
+  titleColor: '#474F57',
+  // 서브타이틀
+  subtitleSize: 54,
+  subtitleLineHeight: 54, // 100%
+  subtitleLetterSpacing: '-0.03em', // -3%
+  subtitleWeight: 700,
+  subtitleColor: '#474F57',
+  subtitleMarginTop: 5, // 타이틀과의 간격
+
+  // 상품설명
+  descSize: 48,
+  descLineHeight: 58,
+  descLetterSpacing: '-0.03em', // -3%
+  descWeight: 600,
+  descColor: '#474F57',
+  descMarginTop: 37, // 서브타이틀 없을 때
+  descMarginTopWithSubtitle: 37, // 서브타이틀 있을 때
+  // 가격 — 우측 하단, 칩과 같은 y 라인 (레퍼런스 이미지 기준 복원)
+  priceColor: '#474F57',
+  priceWeight: 700,
+  priceFontSize: 100.8, // Figma 50.4 × 2
+  wonFontSize: 32, // ₩ 기호 — 숫자 상단에 작게 배치
+  priceRight: 40,
+  priceTopY: 542, // Figma 271 × 2 (할인 시 sale price, 정상가 단일 시도 동일)
+  priceBottomY: 644, // Figma 322 × 2 (할인 시 정상가 취소선)
+  // 컬러칩: 100px, gap 20px, 컨테이너 806px → 한 줄 최대 6개 (wrap)
+  // 텍스트 column flex 안에 위치 → 상품설명으로부터 margin-top 85px
+  chipSize: 100,
+  chipGap: 20,
+  chipsContainerWidth: 806,
+  chipsMarginTop: 85,
+  // 12개 이상일 때 — 한 줄 7개로 축소 (80px chip + 15px gap = 80*7 + 15*6 = 650px)
+  chipsLargeThreshold: 12,
+  chipSizeLarge: 80,
+  chipGapLarge: 15,
+  chipsContainerWidthLarge: 650,
+  // 20개 이상일 때 — margin-top 만 60px 로 축소 (행 수가 많아 위 여백 줄임)
+  chipsExtraLargeThreshold: 20,
+  chipsMarginTopExtraLarge: 60,
+  // SALE 배지 — 우측 상단 (원래 Figma 위치 복원)
+  badgeRight: 40,
+  badgeTop: 0,
+  badgeW: 220,
+  badgeH: 190,
+  badgeSaleSize: 54.6,
+  badgeNumSize: 79.8,
+  badgePctSize: 50,
+  // 텍스트 영역 maxWidth — 배지 좌측 가장자리(1724)를 침범하지 않도록
+  textMaxWidth: 920,
+};
+
+// B타입 전용 스펙 — 실제 렌더 픽셀(1984×602) 기준.
+const B_TYPE_SPEC = {
+  // 대표이미지 (썸네일): 500×500, 좌측 패딩 60, 세로 중앙 정렬
+  thumbSize: 500,
+  thumbX: 60,
+  thumbY: 51, // (602 - 500) / 2
+  thumbToTextGap: 140, // 썸네일 우측 → 타이틀 좌측 간격
+  // 로고 (썸네일 좌하단 오버레이) — 썸네일 사이즈에 맞춰 비례
+  logoW: 150,
+  logoH: 60,
+  logoLeftInThumb: 30,
+  logoBottomInThumb: 15,
+  // 우측 텍스트 영역 y 시작 (상품명 margin-top 105px)
+  textY: 105,
+  textMaxWidth: 900,
+  // 상품명
+  titleSize: 73,
+  titleLineHeight: 73, // 100%
+  titleLetterSpacing: 'normal', // 0%
+  titleWeight: 800,
+  titleColor: '#474F57',
+  // 서브타이틀
+  subtitleSize: 42,
+  subtitleLineHeight: 42, // 100% (명시 없음, 추정)
+  subtitleLetterSpacing: '-0.03em', // -3%
+  subtitleWeight: 700,
+  subtitleColor: '#474F57',
+  subtitleMarginTop: 5, // 상품명과의 간격
+  // 상품설명
+  descSize: 38,
+  descLineHeight: 46, // line-height 명시 없음 → 약 120%
+  descLetterSpacing: '-0.03em', // -3%
+  descWeight: 700,
+  descColor: '#474F57',
+  descMarginTop: 37, // 서브타이틀 없을 때
+  descMarginTopWithSubtitle: 30, // 서브타이틀 있을 때
+  // 가격 — 우측 하단, ₩ 는 숫자 상단 정렬 (wonAlignTop)
+  priceColor: '#474F57',
+  priceWeight: 700,
+  priceFontSize: 80,
+  wonFontSize: 26,
+  priceRight: 40,
+  priceTopY: 415,
+  priceBottomY: 495, // 정상가 취소선 (할인 시)
+  // 컬러칩: 80px × 7개 기본 (상품명별 분기는 PriceCardB 안에서) — 텍스트 흐름 안에 배치
+  chipSize: 80,
+  chipGap: 15,
+  chipsContainerWidth: 650,
+  chipsMarginTop: 60, // 텍스트(설명/서브타이틀) 끝에서 떨어지는 간격
+  // SALE 배지 — 우측 상단
+  badgeRight: 40,
+  badgeTop: 0,
+  badgeW: 180,
+  badgeH: 156,
+  badgeSaleSize: 45,
+  badgeNumSize: 66,
+  badgePctSize: 41,
 };
 
 // ─── 썸네일 블록 ────────────────────────────────────────────
@@ -245,11 +377,20 @@ function ThumbnailBlock({
 
 // ─── 컬러칩 ─────────────────────────────────────────────
 function ColorChips({
-  colors, left, top, chipSize, gap, base64ColorChips, maxWidth,
+  colors, left, top, chipSize, gap, base64ColorChips, maxWidth, wrap, fixedSize, relative, marginTop,
 }: {
-  colors: string[]; left: number; top: number; chipSize: number; gap: number;
+  colors: string[]; chipSize: number; gap: number;
+  // 절대 위치 모드 (기본): left/top 필요
+  left?: number; top?: number;
   base64ColorChips?: (string | null)[];
   maxWidth?: number;
+  // wrap: true면 maxWidth 를 넘으면 줄바꿈 (chipSize 유지)
+  // fixedSize: true면 chipSize 자동 축소 비활성 (wrap 과 함께 사용)
+  wrap?: boolean;
+  fixedSize?: boolean;
+  // relative: true면 absolute 가 아닌 flow 안에 자리잡음 (부모 column flex 자식으로)
+  relative?: boolean;
+  marginTop?: number;
 }) {
   if (!colors || colors.length === 0) return null;
 
@@ -259,15 +400,25 @@ function ColorChips({
   const requiredWidth = colors.length * chipSize + Math.max(0, colors.length - 1) * gap;
   let actualChipSize = chipSize;
   let actualGap = gap;
-  if (maxWidth && requiredWidth > maxWidth) {
+  if (!fixedSize && maxWidth && requiredWidth > maxWidth) {
     actualChipSize = maxWidth / (colors.length + Math.max(0, colors.length - 1) * gapRatio);
     actualGap = actualChipSize * gapRatio;
   }
 
   return (
     <div style={{
-      position: 'absolute', left, top,
-      display: 'flex', flexDirection: 'row', alignItems: 'center', gap: actualGap,
+      // relative=true: 부모 flex column 안에 자리잡음 (margin-top 으로 위 요소와 간격)
+      // relative=false(기본): absolute 위치 (left/top 사용)
+      // satori 가 undefined CSS 값을 trim() 시도하다 깨질 수 있어 조건부 spread 로 키 자체 제외
+      position: relative ? 'relative' : 'absolute',
+      ...(relative
+        ? (marginTop !== undefined ? { marginTop } : {})
+        : { left: left ?? 0, top: top ?? 0 }),
+      display: 'flex', flexDirection: 'row', alignItems: 'center',
+      columnGap: actualGap,
+      rowGap: actualGap,
+      flexWrap: wrap ? 'wrap' : 'nowrap',
+      ...(wrap && maxWidth ? { width: maxWidth } : {}),
     }}>
       {colors.map((color, i) => {
         const colorVal = getColor(color);
@@ -280,16 +431,23 @@ function ColorChips({
             bgImgUrl = match ? match[1] : '';
           }
         }
+        // satori 클리핑 안정성: shorthand 'px' 문자열 + img 자체에도 동일 radius 적용
+        const radiusStr = `${actualChipSize / 2}px`;
         return (
           <div key={`${color}-${i}`} style={{
-            width: actualChipSize, height: actualChipSize, borderRadius: 9999,
+            width: actualChipSize, height: actualChipSize,
+            borderRadius: radiusStr,
             display: 'flex', overflow: 'hidden',
-            backgroundColor: isImg ? 'rgba(0,0,0,0)' : colorVal,
+            backgroundColor: isImg ? 'rgb(245, 245, 245)' : colorVal,
             flexShrink: 0, flexGrow: 0,
           }}>
             {isImg && bgImgUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={bgImgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={color} />
+              <img src={bgImgUrl}
+                style={{
+                  width: '100%', height: '100%', objectFit: 'cover',
+                  borderRadius: radiusStr,
+                }} alt={color} />
             )}
           </div>
         );
@@ -299,22 +457,31 @@ function ColorChips({
 }
 
 // ─── 가격 한 줄 (₩ + 숫자, 오른쪽 정렬) ──────────────────────
+// wonAlignTop=false(기본): ₩ 를 숫자 baseline 약간 아래로 정렬 (B타입/커스텀 기존 동작)
+// wonAlignTop=true:        ₩ 를 숫자 상단(cap-height)에 맞춰 정렬 (A타입)
 function PriceLine({
-  amount, color, fontSize, wonSize, right, top, strike,
+  amount, color, fontSize, wonSize, right, top, strike, wonAlignTop,
 }: {
   amount: number; color: string; fontSize: number; wonSize: number;
-  right: number; top: number; strike?: boolean;
+  right: number; top: number; strike?: boolean; wonAlignTop?: boolean;
 }) {
   return (
     <div style={{
       position: 'absolute', right, top,
-      display: 'flex', flexDirection: 'row', alignItems: 'flex-end',
+      display: 'flex', flexDirection: 'row',
+      alignItems: wonAlignTop ? 'flex-start' : 'flex-end',
     }}>
       <span style={{
-        fontFamily: FONT, fontWeight: 700, fontSize: wonSize, color,
+        fontFamily: FONT,
+        // wonAlignTop=true (A타입): 굵기 400 (가볍게), top 정렬
+        // wonAlignTop=false (B/커스텀): 굵기 700, baseline 정렬
+        fontWeight: wonAlignTop ? 400 : 700,
+        fontSize: wonSize, color,
         display: 'flex', flexShrink: 0, marginRight: Math.round(fontSize * 0.12),
-        // ₩ 는 숫자 baseline 보다 살짝 아래 정렬 (Figma 의 y 오프셋 +9 유사 효과)
-        paddingBottom: Math.round(fontSize * 0.04),
+        // baseline 정렬 시: 숫자 아래로 살짝 (Figma y 오프셋 유사)
+        // top 정렬 시: 숫자 cap-top 과 ₩ cap-top 을 맞추기 위해 살짝 아래로
+        paddingBottom: wonAlignTop ? 0 : Math.round(fontSize * 0.04),
+        paddingTop: wonAlignTop ? Math.round(fontSize * 0.05) : 0,
       }}>₩</span>
       <span style={{
         fontFamily: FONT, fontWeight: 700, fontSize, color,
@@ -574,15 +741,331 @@ export function PriceCard({ product, width, height, autoFit }: {
 }
 
 // ═══════════════════════════════════════════════════════════
-// A타입: 1984 × 602 (Figma 가로 2x, 세로 1.498x)
+// A타입: 1984 × 803 — 절대 픽셀 기반 신규 디자인
+// 좌측 썸네일 640×640, 우측 텍스트 영역(타이틀/서브타이틀/상품설명),
+// 우측 하단에 가격, 그 좌측에 컬러칩(같은 y 라인).
+// 칩이 2행 이상이면 y가 491로 올라감 (가격 위로).
 // ═══════════════════════════════════════════════════════════
+function PriceCardA({ product }: { product: ProductData }) {
+  const W = 1984, H = 803;
+  const A = A_TYPE_SPEC;
+
+  const hasSale = product.discountRate > 0 && product.salePrice > 0 && product.salePrice !== product.originalPrice;
+  const showDesc = product.description && product.description !== '없음';
+  const showColors = product.colors?.length > 0
+    && !product.colors.includes('없음')
+    && !product.colors.includes('이미지');
+  const hasSubtitle = !!product.subtitle;
+
+  // 텍스트 영역 시작 좌표
+  const textX = A.thumbX + A.thumbSize + A.thumbToTextGap;
+  const textY = A.textY;
+
+  // 컬러칩 — 12개 이상이면 한 줄 7개 (작은 칩), 그 미만이면 한 줄 6개 (큰 칩)
+  const isLargeColorSet = showColors && product.colors.length >= A.chipsLargeThreshold;
+  const chipSize = isLargeColorSet ? A.chipSizeLarge : A.chipSize;
+  const chipGap = isLargeColorSet ? A.chipGapLarge : A.chipGap;
+  const chipContainerWidth = isLargeColorSet ? A.chipsContainerWidthLarge : A.chipsContainerWidth;
+  const isExtraLargeColorSet = showColors && product.colors.length >= A.chipsExtraLargeThreshold;
+  const isSquishyboo = (product.name || '').includes('스퀴지보');
+  const chipsMarginTop = isSquishyboo
+    ? 15
+    : (isExtraLargeColorSet ? A.chipsMarginTopExtraLarge : A.chipsMarginTop);
+
+  return (
+    <div style={{
+      position: 'relative', width: W, height: H,
+      backgroundColor: 'white', display: 'flex',
+      fontFamily: FONT, overflow: 'hidden',
+    }}>
+      <ThumbnailBlock
+        product={product}
+        left={A.thumbX} top={A.thumbY} size={A.thumbSize}
+        logoLeft={A.logoLeftInThumb} logoBottom={A.logoBottomInThumb}
+        logoW={A.logoW} logoH={A.logoH}
+      />
+
+      <div style={{
+        position: 'absolute', left: textX, top: textY,
+        display: 'flex', flexDirection: 'column',
+        maxWidth: A.textMaxWidth,
+      }}>
+        <div style={{
+          fontFamily: FONT, fontWeight: A.titleWeight, fontSize: A.titleSize,
+          color: A.titleColor, lineHeight: `${A.titleLineHeight}px`,
+          letterSpacing: A.titleLetterSpacing,
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {product.name?.split('\n').map((line, i) => (
+            <span key={i} style={{ display: 'flex' }}>{line}</span>
+          ))}
+        </div>
+
+        {hasSubtitle && (
+          <div style={{
+            fontFamily: FONT, fontWeight: A.subtitleWeight, fontSize: A.subtitleSize,
+            color: A.subtitleColor, lineHeight: `${A.subtitleLineHeight}px`,
+            letterSpacing: A.subtitleLetterSpacing,
+            display: 'flex', flexDirection: 'column',
+            marginTop: A.subtitleMarginTop,
+          }}>
+            {product.subtitle?.split('\n').map((line, i) => (
+              <span key={i} style={{ display: 'flex' }}>{line}</span>
+            ))}
+          </div>
+        )}
+
+        {showDesc && (
+          <div style={{
+            fontFamily: FONT, fontWeight: A.descWeight, fontSize: A.descSize,
+            color: A.descColor, lineHeight: `${A.descLineHeight}px`,
+            letterSpacing: A.descLetterSpacing,
+            display: 'flex', flexDirection: 'column',
+            marginTop: hasSubtitle ? A.descMarginTopWithSubtitle : A.descMarginTop,
+          }}>
+            {product.description?.split('\n').map((line, i) => (
+              <span key={i} style={{ display: 'flex' }}>{line}</span>
+            ))}
+          </div>
+        )}
+
+        {showColors && (
+          <ColorChips
+            colors={product.colors}
+            chipSize={chipSize} gap={chipGap}
+            base64ColorChips={product._base64ColorChips}
+            maxWidth={chipContainerWidth}
+            wrap fixedSize
+            relative marginTop={chipsMarginTop}
+          />
+        )}
+      </div>
+
+      {hasSale ? (
+        <>
+          <PriceLine
+            amount={product.salePrice}
+            color={getSaleColor(product.discountRate)}
+            fontSize={A.priceFontSize} wonSize={A.wonFontSize}
+            right={A.priceRight} top={A.priceTopY}
+            wonAlignTop
+          />
+          <PriceLine
+            amount={product.originalPrice}
+            color={A.priceColor}
+            fontSize={A.priceFontSize} wonSize={A.wonFontSize}
+            right={A.priceRight} top={A.priceBottomY}
+            strike wonAlignTop
+          />
+        </>
+      ) : (
+        <PriceLine
+          amount={product.originalPrice}
+          color={A.priceColor}
+          fontSize={A.priceFontSize} wonSize={A.wonFontSize}
+          right={A.priceRight} top={A.priceTopY}
+          wonAlignTop
+        />
+      )}
+
+      {hasSale && (
+        <SaleBadge
+          rate={product.discountRate} product={product}
+          right={A.badgeRight} top={A.badgeTop}
+          w={A.badgeW} h={A.badgeH}
+          saleSize={A.badgeSaleSize}
+          numSize={A.badgeNumSize}
+          pctSize={A.badgePctSize}
+        />
+      )}
+    </div>
+  );
+}
+
 export function TypeAPreview({ product }: { product: ProductData; baseUrl?: string }) {
-  return <PriceCard product={product} width={1984} height={602} />;
+  return <PriceCardA product={product} />;
 }
 
 // ═══════════════════════════════════════════════════════════
-// B타입: 1984 × 803 (Figma 균등 2x)
+// 커스텀: 임의 width × height — A타입 디자인을 CSS transform 으로 비례 축소.
+// PriceCardA(1984×803)를 그대로 렌더한 뒤 transform: scale() 로 캔버스에 맞춤.
 // ═══════════════════════════════════════════════════════════
+export function PriceCardCustom({ product, width, height }: { product: ProductData; width: number; height: number }) {
+  const REF_W = 1984;
+  const REF_H = 803;
+  const scale = Math.min(width / REF_W, height / REF_H);
+  const offsetX = (width - REF_W * scale) / 2;
+  const offsetY = (height - REF_H * scale) / 2;
+  return (
+    <div style={{
+      position: 'relative', width, height,
+      backgroundColor: 'white', display: 'flex', overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'absolute',
+        left: offsetX, top: offsetY,
+        width: REF_W, height: REF_H,
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        display: 'flex',
+      }}>
+        <PriceCardA product={product} />
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// B타입: 1984 × 602 — 절대 픽셀 기반 신규 디자인
+// 좌측 썸네일 500×500, 우측 텍스트 영역(상품명/서브타이틀/상품설명) + 컬러칩,
+// 우측 하단에 가격, 우측 상단에 SALE 배지.
+// ═══════════════════════════════════════════════════════════
+function PriceCardB({ product }: { product: ProductData }) {
+  const W = 1984, H = 602;
+  const B = B_TYPE_SPEC;
+
+  const hasSale = product.discountRate > 0 && product.salePrice > 0 && product.salePrice !== product.originalPrice;
+  const showDesc = product.description && product.description !== '없음';
+  const showColors = product.colors?.length > 0
+    && !product.colors.includes('없음')
+    && !product.colors.includes('이미지');
+  const hasSubtitle = !!product.subtitle;
+
+  // 텍스트 영역 시작 좌표
+  const textX = B.thumbX + B.thumbSize + B.thumbToTextGap;
+  const textY = B.textY;
+
+  // 상품명 기반 컬러칩 한 줄 개수
+  //   스퀴지보 → 10개/줄, 메이트 → 8개/줄, 그 외 → 7개/줄
+  const productName = product.name || '';
+  const isSquishyboo = productName.includes('스퀴지보');
+  const chipsPerRow = isSquishyboo ? 10
+    : productName.includes('메이트') ? 8
+    : 7;
+  const chipContainerWidth = B.chipSize * chipsPerRow + B.chipGap * (chipsPerRow - 1);
+  // 스퀴지보 → margin-top 15px / 그 외 → 기본
+  const chipsMarginTop = isSquishyboo ? 15 : B.chipsMarginTop;
+
+  return (
+    <div style={{
+      position: 'relative', width: W, height: H,
+      backgroundColor: 'white', display: 'flex',
+      fontFamily: FONT, overflow: 'hidden',
+    }}>
+      {/* 대표이미지 (500×500) + 로고 오버레이 */}
+      <ThumbnailBlock
+        product={product}
+        left={B.thumbX} top={B.thumbY} size={B.thumbSize}
+        logoLeft={B.logoLeftInThumb} logoBottom={B.logoBottomInThumb}
+        logoW={B.logoW} logoH={B.logoH}
+      />
+
+      {/* 텍스트 영역: 상품명 → (서브타이틀) → 상품설명 → 컬러칩 (위에서 아래로) */}
+      <div style={{
+        position: 'absolute', left: textX, top: textY,
+        display: 'flex', flexDirection: 'column',
+        maxWidth: B.textMaxWidth,
+      }}>
+        {/* 상품명 */}
+        <div style={{
+          fontFamily: FONT, fontWeight: B.titleWeight, fontSize: B.titleSize,
+          color: B.titleColor, lineHeight: `${B.titleLineHeight}px`,
+          letterSpacing: B.titleLetterSpacing,
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {product.name?.split('\n').map((line, i) => (
+            <span key={i} style={{ display: 'flex' }}>{line}</span>
+          ))}
+        </div>
+
+        {/* 서브타이틀 */}
+        {hasSubtitle && (
+          <div style={{
+            fontFamily: FONT, fontWeight: B.subtitleWeight, fontSize: B.subtitleSize,
+            color: B.subtitleColor, lineHeight: `${B.subtitleLineHeight}px`,
+            letterSpacing: B.subtitleLetterSpacing,
+            display: 'flex', flexDirection: 'column',
+            marginTop: B.subtitleMarginTop,
+          }}>
+            {product.subtitle?.split('\n').map((line, i) => (
+              <span key={i} style={{ display: 'flex' }}>{line}</span>
+            ))}
+          </div>
+        )}
+
+        {/* 상품설명 — 서브타이틀 없을 때 37px, 있을 때 60px */}
+        {showDesc && (
+          <div style={{
+            fontFamily: FONT, fontWeight: B.descWeight, fontSize: B.descSize,
+            color: B.descColor, lineHeight: `${B.descLineHeight}px`,
+            letterSpacing: B.descLetterSpacing,
+            display: 'flex', flexDirection: 'column',
+            marginTop: hasSubtitle ? B.descMarginTopWithSubtitle : B.descMarginTop,
+          }}>
+            {product.description?.split('\n').map((line, i) => (
+              <span key={i} style={{ display: 'flex' }}>{line}</span>
+            ))}
+          </div>
+        )}
+
+        {/* 컬러칩 — 텍스트 column 안에 위치(A타입과 동일).
+             margin-top: 스퀴지보 15 / 기본 60
+             상품명별로 한 줄 개수 분기: 스퀴지보 10 / 메이트 8 / 기본 7 */}
+        {showColors && (
+          <ColorChips
+            colors={product.colors}
+            chipSize={B.chipSize} gap={B.chipGap}
+            base64ColorChips={product._base64ColorChips}
+            maxWidth={chipContainerWidth}
+            wrap fixedSize
+            relative marginTop={chipsMarginTop}
+          />
+        )}
+      </div>
+
+      {/* 가격 — 우측 하단, ₩ 상단 정렬 */}
+      {hasSale ? (
+        <>
+          <PriceLine
+            amount={product.salePrice}
+            color={getSaleColor(product.discountRate)}
+            fontSize={B.priceFontSize} wonSize={B.wonFontSize}
+            right={B.priceRight} top={B.priceTopY}
+            wonAlignTop
+          />
+          <PriceLine
+            amount={product.originalPrice}
+            color={B.priceColor}
+            fontSize={B.priceFontSize} wonSize={B.wonFontSize}
+            right={B.priceRight} top={B.priceBottomY}
+            strike wonAlignTop
+          />
+        </>
+      ) : (
+        <PriceLine
+          amount={product.originalPrice}
+          color={B.priceColor}
+          fontSize={B.priceFontSize} wonSize={B.wonFontSize}
+          right={B.priceRight} top={B.priceTopY}
+          wonAlignTop
+        />
+      )}
+
+      {/* SALE 배지 */}
+      {hasSale && (
+        <SaleBadge
+          rate={product.discountRate} product={product}
+          right={B.badgeRight} top={B.badgeTop}
+          w={B.badgeW} h={B.badgeH}
+          saleSize={B.badgeSaleSize}
+          numSize={B.badgeNumSize}
+          pctSize={B.badgePctSize}
+        />
+      )}
+    </div>
+  );
+}
+
 export function TypeBPreview({ product }: { product: ProductData; baseUrl?: string }) {
-  return <PriceCard product={product} width={1984} height={803} />;
+  return <PriceCardB product={product} />;
 }

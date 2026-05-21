@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "가격표 이미지 자동 생성기 | Yogibo",
   description:
-    "엑셀 파일 업로드로 상품 가격표 이미지를 자동 생성합니다. A타입(1984×602) · B타입(1984×803).",
+    "엑셀 파일 업로드로 상품 가격표 이미지를 자동 생성합니다. A타입(1984×803) · B타입(1984×602).",
 };
 
 export default function RootLayout({

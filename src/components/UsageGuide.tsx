@@ -218,8 +218,8 @@ export default function UsageGuide() {
             <Step n={1} title="단일 상품 다운로드 (섹션 3 하단)">
               상품 하나를 선택하고 미리보기 확인 후:
               <ul style={{ marginTop: 6, paddingLeft: 18, lineHeight: 1.7 }}>
-                <li><b style={{ color: '#E8192C' }}>A타입</b> — 1984×602 PNG</li>
-                <li><b style={{ color: '#111827' }}>B타입</b> — 1984×803 PNG</li>
+                <li><b style={{ color: '#E8192C' }}>A타입</b> — 1984×803 PNG</li>
+                <li><b style={{ color: '#111827' }}>B타입</b> — 1984×602 PNG</li>
                 <li><b style={{ color: '#16A34A' }}>전체 (A+B)</b> — 두 타입 한 번에</li>
                 <li><b style={{ color: '#6D28D9' }}>커스텀</b> — W/H 직접 입력. Figma 비율 유지하며 비례 축소(autoFit)</li>
               </ul>

@@ -21,9 +21,9 @@ export interface ProductData {
 
 export type ImageType = 'A' | 'B';
 
-// A-type: 1984 × 602
-// B-type: 1984 × 803
+// A-type: 1984 × 803
+// B-type: 1984 × 602
 export const IMAGE_SPECS = {
-  A: { width: 1984, height: 602 },
-  B: { width: 1984, height: 803 },
+  A: { width: 1984, height: 803 },
+  B: { width: 1984, height: 602 },
 } as const;
