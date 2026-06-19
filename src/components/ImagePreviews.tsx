@@ -460,15 +460,22 @@ function ColorChips({
 // wonAlignTop=false(기본): ₩ 를 숫자 baseline 약간 아래로 정렬 (B타입/커스텀 기존 동작)
 // wonAlignTop=true:        ₩ 를 숫자 상단(cap-height)에 맞춰 정렬 (A타입)
 function PriceLine({
-  amount, color, fontSize, wonSize, right, top, strike, wonAlignTop,
+  amount, color, fontSize, wonSize, right, top, strike, wonAlignTop, canvasW,
 }: {
   amount: number; color: string; fontSize: number; wonSize: number;
   right: number; top: number; strike?: boolean; wonAlignTop?: boolean;
+  // 캔버스(프레임) 전체 폭. satori 에서 right 앵커가 깨지므로 left 로 환산하기 위해 필요.
+  canvasW: number;
 }) {
+  // satori(next/og)는 position:absolute + right 앵커 요소를 PNG export 에서 렌더하지
+  // 않는다(브라우저 미리보기는 정상). left 앵커는 정상 동작하므로,
+  // 콘텐츠 폭을 추정해 left = 캔버스폭 - right - 폭 으로 환산한다.
+  const boxWidth = Math.ceil(estimatePriceWidth(amount, fontSize, wonSize)) + Math.round(fontSize * 0.1);
+  const left = Math.round(canvasW - right - boxWidth);
   return (
     <div style={{
-      position: 'absolute', right, top,
-      display: 'flex', flexDirection: 'row',
+      position: 'absolute', left, top, width: boxWidth,
+      display: 'flex', flexDirection: 'row', justifyContent: 'flex-end',
       alignItems: wonAlignTop ? 'flex-start' : 'flex-end',
     }}>
       <span style={{
@@ -703,14 +710,14 @@ export function PriceCard({ product, width, height, autoFit }: {
             color={getSaleColor(product.discountRate)}
             fontSize={FIGMA.priceTopSize * sf}
             wonSize={FIGMA.wonSize * sf}
-            right={priceRight} top={posY(FIGMA.priceTopY)}
+            right={priceRight} canvasW={width} top={posY(FIGMA.priceTopY)}
           />
           <PriceLine
             amount={product.originalPrice}
             color={STRIKE_COLOR}
             fontSize={FIGMA.priceTopSize * sf}
             wonSize={FIGMA.wonSize * sf}
-            right={priceRight} top={posY(FIGMA.priceBottomY)}
+            right={priceRight} canvasW={width} top={posY(FIGMA.priceBottomY)}
             strike
           />
         </>
@@ -720,7 +727,7 @@ export function PriceCard({ product, width, height, autoFit }: {
           color={TEXT_COLOR}
           fontSize={FIGMA.priceTopSize * sf}
           wonSize={FIGMA.wonSize * sf}
-          right={priceRight} top={posY(FIGMA.priceTopY)}
+          right={priceRight} canvasW={width} top={posY(FIGMA.priceTopY)}
         />
       )}
 
@@ -847,14 +854,14 @@ function PriceCardA({ product }: { product: ProductData }) {
             amount={product.salePrice}
             color={getSaleColor(product.discountRate)}
             fontSize={A.priceFontSize} wonSize={A.wonFontSize}
-            right={A.priceRight} top={A.priceTopY}
+            right={A.priceRight} canvasW={W} top={A.priceTopY}
             wonAlignTop
           />
           <PriceLine
             amount={product.originalPrice}
             color={A.priceColor}
             fontSize={A.priceFontSize} wonSize={A.wonFontSize}
-            right={A.priceRight} top={A.priceBottomY}
+            right={A.priceRight} canvasW={W} top={A.priceBottomY}
             strike wonAlignTop
           />
         </>
@@ -863,7 +870,7 @@ function PriceCardA({ product }: { product: ProductData }) {
           amount={product.originalPrice}
           color={A.priceColor}
           fontSize={A.priceFontSize} wonSize={A.wonFontSize}
-          right={A.priceRight} top={A.priceTopY}
+          right={A.priceRight} canvasW={W} top={A.priceTopY}
           wonAlignTop
         />
       )}
@@ -1030,14 +1037,14 @@ function PriceCardB({ product }: { product: ProductData }) {
             amount={product.salePrice}
             color={getSaleColor(product.discountRate)}
             fontSize={B.priceFontSize} wonSize={B.wonFontSize}
-            right={B.priceRight} top={B.priceTopY}
+            right={B.priceRight} canvasW={W} top={B.priceTopY}
             wonAlignTop
           />
           <PriceLine
             amount={product.originalPrice}
             color={B.priceColor}
             fontSize={B.priceFontSize} wonSize={B.wonFontSize}
-            right={B.priceRight} top={B.priceBottomY}
+            right={B.priceRight} canvasW={W} top={B.priceBottomY}
             strike wonAlignTop
           />
         </>
@@ -1046,7 +1053,7 @@ function PriceCardB({ product }: { product: ProductData }) {
           amount={product.originalPrice}
           color={B.priceColor}
           fontSize={B.priceFontSize} wonSize={B.wonFontSize}
-          right={B.priceRight} top={B.priceTopY}
+          right={B.priceRight} canvasW={W} top={B.priceTopY}
           wonAlignTop
         />
       )}
