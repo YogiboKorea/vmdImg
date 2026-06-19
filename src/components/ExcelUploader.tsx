@@ -77,8 +77,17 @@ function parseRowWithMap(row: unknown[], map: ColumnMap): ProductData | null {
   const description   = map.description   !== undefined ? cell(row, map.description)   : '';
   const colorsRaw     = map.colors        !== undefined ? cell(row, map.colors)        : '';
   const originalPrice = map.originalPrice !== undefined ? parseFloat(cell(row, map.originalPrice).replace(/[^0-9.]/g, '')) || 0 : 0;
-  const salePrice     = map.salePrice     !== undefined ? parseFloat(cell(row, map.salePrice).replace(/[^0-9.]/g, '')) || 0 : 0;
-  const discountRate  = map.discountRate  !== undefined ? parseFloat(cell(row, map.discountRate).replace(/[^0-9.]/g, '')) || 0 : 0;
+  let salePrice       = map.salePrice     !== undefined ? parseFloat(cell(row, map.salePrice).replace(/[^0-9.]/g, '')) || 0 : 0;
+  let discountRate    = map.discountRate  !== undefined ? parseFloat(cell(row, map.discountRate).replace(/[^0-9.]/g, '')) || 0 : 0;
+
+  // 세 값 중 비어 있는 항목 보완: 정상가만 있으면 할인 표시가 안 나오므로 서로 계산해 채운다.
+  if (discountRate <= 0 && originalPrice > 0 && salePrice > 0 && salePrice < originalPrice) {
+    // 정상가 + 할인가 → 할인율 계산
+    discountRate = Math.round((1 - salePrice / originalPrice) * 100);
+  } else if (salePrice <= 0 && originalPrice > 0 && discountRate > 0) {
+    // 정상가 + 할인율 → 할인가 계산
+    salePrice = Math.round(originalPrice * (1 - discountRate / 100));
+  }
 
   const colors = colorsRaw.split('/').map((c) => c.trim()).filter(Boolean);
   const thumbnailImage = name.replace(/\s+/g, '') + '.jpg';
