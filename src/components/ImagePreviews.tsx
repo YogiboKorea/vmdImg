@@ -220,14 +220,14 @@ const A_TYPE_SPEC = {
   logoLeftInThumb: 38,
   logoBottomInThumb: 19,
   // 상품명 (타이틀)
-  titleSize: 92,
-  titleLineHeight: 92, // 100%
+  titleSize: 70,
+  titleLineHeight: 70, // 100%
   titleLetterSpacing: 'normal', // 0%
   titleWeight: 800,
   titleColor: '#474F57',
   // 서브타이틀
-  subtitleSize: 54,
-  subtitleLineHeight: 54, // 100%
+  subtitleSize: 48,
+  subtitleLineHeight: 48, // 100%
   subtitleLetterSpacing: '-0.03em', // -3%
   subtitleWeight: 700,
   subtitleColor: '#474F57',
@@ -271,8 +271,8 @@ const A_TYPE_SPEC = {
   badgeSaleSize: 54.6,
   badgeNumSize: 79.8,
   badgePctSize: 50,
-  // 텍스트 영역 maxWidth — 배지 좌측 가장자리(1724)를 침범하지 않도록
-  textMaxWidth: 920,
+  // 텍스트 영역 maxWidth — 서브타이틀·상품설명 줄바꿈 폭 (배지 좌측 1724 침범 안 함: 762+940=1702)
+  textMaxWidth: 940,
 };
 
 // B타입 전용 스펙 — 실제 렌더 픽셀(1984×602) 기준.
@@ -776,7 +776,7 @@ function PriceCardA({ product }: { product: ProductData }) {
   const isExtraLargeColorSet = showColors && product.colors.length >= A.chipsExtraLargeThreshold;
   const isSquishyboo = (product.name || '').includes('스퀴지보');
   const chipsMarginTop = isSquishyboo
-    ? 15
+    ? 30
     : (isExtraLargeColorSet ? A.chipsMarginTopExtraLarge : A.chipsMarginTop);
 
   return (
