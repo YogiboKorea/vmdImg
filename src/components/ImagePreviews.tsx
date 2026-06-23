@@ -249,15 +249,15 @@ const A_TYPE_SPEC = {
   priceRight: 40,
   priceTopY: 542, // Figma 271 × 2 (할인 시 sale price, 정상가 단일 시도 동일)
   priceBottomY: 644, // Figma 322 × 2 (할인 시 정상가 취소선)
-  // 컬러칩: 100px, gap 20px, 컨테이너 806px → 한 줄 최대 6개 (wrap)
+  // 컬러칩: 95px, gap 20px, 컨테이너 806px → 한 줄 최대 7개 (wrap)
   // 텍스트 column flex 안에 위치 → 상품설명으로부터 margin-top 85px
-  chipSize: 100,
+  chipSize: 95,
   chipGap: 20,
   chipsContainerWidth: 806,
   chipsMarginTop: 85,
-  // 15개 이상일 때 — 칩 95px 로 축소하고 컨테이너를 750px 로 잡아 wrap
+  // 15개 이상일 때 — 칩 80px 로 축소하고 컨테이너를 750px 로 잡아 wrap (한 줄 8개)
   chipsLargeThreshold: 15,
-  chipSizeLarge: 95,
+  chipSizeLarge: 80,
   chipGapLarge: 15,
   chipsContainerWidthLarge: 750,
   // 20개 이상일 때 — margin-top 만 60px 로 축소 (행 수가 많아 위 여백 줄임)
@@ -768,7 +768,7 @@ function PriceCardA({ product }: { product: ProductData }) {
   const textX = A.thumbX + A.thumbSize + A.thumbToTextGap;
   const textY = A.textY;
 
-  // 컬러칩 — 15개 이상이면 칩 95px·컨테이너 750px 로 축소, 그 미만이면 100px·806px
+  // 컬러칩 — 15개 이상이면 칩 80px·컨테이너 750px 로 축소(한 줄 8개), 그 미만이면 100px·806px
   const isLargeColorSet = showColors && product.colors.length >= A.chipsLargeThreshold;
   const chipSize = isLargeColorSet ? A.chipSizeLarge : A.chipSize;
   const chipGap = isLargeColorSet ? A.chipGapLarge : A.chipGap;
