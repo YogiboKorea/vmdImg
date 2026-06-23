@@ -255,11 +255,11 @@ const A_TYPE_SPEC = {
   chipGap: 20,
   chipsContainerWidth: 806,
   chipsMarginTop: 85,
-  // 12개 이상일 때 — 한 줄 7개로 축소 (80px chip + 15px gap = 80*7 + 15*6 = 650px)
-  chipsLargeThreshold: 12,
-  chipSizeLarge: 80,
+  // 15개 이상일 때 — 칩 95px 로 축소하고 컨테이너를 750px 로 잡아 wrap
+  chipsLargeThreshold: 15,
+  chipSizeLarge: 95,
   chipGapLarge: 15,
-  chipsContainerWidthLarge: 650,
+  chipsContainerWidthLarge: 750,
   // 20개 이상일 때 — margin-top 만 60px 로 축소 (행 수가 많아 위 여백 줄임)
   chipsExtraLargeThreshold: 20,
   chipsMarginTopExtraLarge: 60,
@@ -768,7 +768,7 @@ function PriceCardA({ product }: { product: ProductData }) {
   const textX = A.thumbX + A.thumbSize + A.thumbToTextGap;
   const textY = A.textY;
 
-  // 컬러칩 — 12개 이상이면 한 줄 7개 (작은 칩), 그 미만이면 한 줄 6개 (큰 칩)
+  // 컬러칩 — 15개 이상이면 칩 95px·컨테이너 750px 로 축소, 그 미만이면 100px·806px
   const isLargeColorSet = showColors && product.colors.length >= A.chipsLargeThreshold;
   const chipSize = isLargeColorSet ? A.chipSizeLarge : A.chipSize;
   const chipGap = isLargeColorSet ? A.chipGapLarge : A.chipGap;
