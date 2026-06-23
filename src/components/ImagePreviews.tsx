@@ -291,14 +291,14 @@ const B_TYPE_SPEC = {
   textY: 105,
   textMaxWidth: 900,
   // 상품명
-  titleSize: 73,
-  titleLineHeight: 73, // 100%
+  titleSize: 70,
+  titleLineHeight: 70, // 100%
   titleLetterSpacing: 'normal', // 0%
   titleWeight: 800,
   titleColor: '#474F57',
   // 서브타이틀
-  subtitleSize: 42,
-  subtitleLineHeight: 42, // 100% (명시 없음, 추정)
+  subtitleSize: 48,
+  subtitleLineHeight: 48, // 100%
   subtitleLetterSpacing: '-0.03em', // -3%
   subtitleWeight: 700,
   subtitleColor: '#474F57',
