@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { TypeAPreview, TypeBPreview, PriceCardCustom } from '@/components/ImagePreviews';
+import { TypeAPreview, TypeBPreview } from '@/components/ImagePreviews';
 import sharp from 'sharp';
 
 /*
@@ -177,15 +177,12 @@ export async function POST(req: Request) {
       else if (width === 1984 && height === 602) resolvedType = 'B';
     }
 
-    // autoFit → 커스텀 사이즈로 PriceCardCustom (A타입 디자인 비례 축소)
-    // 그 외엔 resolvedType 기반으로 A/B 전용 렌더러, 어느 것도 매칭 안 되면 PriceCardCustom 폴백
-    const element = autoFit
-      ? <PriceCardCustom product={product} width={width} height={height} />
-      : resolvedType === 'A'
-        ? <TypeAPreview product={product} />
-        : resolvedType === 'B'
-          ? <TypeBPreview product={product} />
-          : <PriceCardCustom product={product} width={width} height={height} />;
+    // 커스텀 사이즈: satori 는 transform: scale() 을 쓰면 클리핑/레이아웃이 깨지므로
+    // A타입(1984×803)을 원본 크기로 렌더한 뒤 sharp 로 목표 사이즈에 맞춰(contain) 리사이즈.
+    const isCustom = autoFit || (resolvedType !== 'A' && resolvedType !== 'B');
+    const element = isCustom || resolvedType === 'A'
+      ? <TypeAPreview product={product} />
+      : <TypeBPreview product={product} />;
 
     // ✅ 폰트 설정: Pretendard 전 weight
     const fontsConfig: any[] = [];
@@ -201,13 +198,28 @@ export async function POST(req: Request) {
       }
     }
 
+    const fonts = fontsConfig.length > 0 ? fontsConfig : undefined;
+
+    if (isCustom) {
+      const REF_W = 1984, REF_H = 803;
+      console.log('[VMD] 커스텀 렌더...', { width, height, fontsCount: fontsConfig.length });
+      const base = await new ImageResponse(element, { width: REF_W, height: REF_H, fonts }).arrayBuffer();
+      const png = await sharp(Buffer.from(base))
+        .resize(width, height, {
+          fit: 'contain',
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
+          kernel: 'lanczos3',
+        })
+        .png()
+        .toBuffer();
+      return new Response(new Uint8Array(png), {
+        headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' },
+      });
+    }
+
     console.log('[VMD] ImageResponse 생성...', { width, height, fontsCount: fontsConfig.length });
 
-    return new ImageResponse(element, {
-      width,
-      height,
-      fonts: fontsConfig.length > 0 ? fontsConfig : undefined,
-    });
+    return new ImageResponse(element, { width, height, fonts });
   } catch (error: any) {
     console.error('[VMD] 최종 에러:', error?.message, error?.cause);
     return new Response(

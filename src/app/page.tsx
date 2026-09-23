@@ -126,8 +126,8 @@ export default function HomePage() {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [lookupProgress, setLookupProgress] = useState<{ done: number; total: number } | null>(null);
   const [modal, setModal] = useState<{ open: boolean; productName: string }>({ open: false, productName: '' });
-  const [customW, setCustomW] = useState<number>(1984);
-  const [customH, setCustomH] = useState<number>(700);
+  const [customW, setCustomW] = useState<number>(2055);
+  const [customH, setCustomH] = useState<number>(673);
 
   const groupedNames = Array.from(new Set(products.map(p => p.name)));
   const currentName = groupedNames[selectedIndex] ?? null;
