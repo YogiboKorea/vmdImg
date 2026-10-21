@@ -1,5 +1,9 @@
 import { ImageResponse } from 'next/og';
 import { TypeAPreview, TypeBPreview } from '@/components/ImagePreviews';
+import { IMAGE_SPECS, customBaseType } from '@/types/product';
+import { getCircleImage, CIRCLE_IMAGE_PX } from '@/lib/circleImages';
+import { LOGO_URL, LOGO_WHITE_URL } from '@/lib/logo';
+import { logoAreaTone } from '@/lib/logoTone';
 import sharp from 'sharp';
 
 /*
@@ -96,7 +100,8 @@ export async function POST(req: Request) {
 
     const TRANSPARENT_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-    const fetchBase64 = async (url: string) => {
+    // fitSize: 지정하면 fitSize×fitSize 정사각(cover)으로 줄여서 base64 — 원본이 큰 원형 이미지용
+    const fetchBase64 = async (url: string, fitSize?: number) => {
       try {
         console.log('[VMD] 이미지 fetch:', url);
         const res = await fetch(url, {
@@ -115,7 +120,8 @@ export async function POST(req: Request) {
         const buf = await res.arrayBuffer();
         if (buf.byteLength === 0) return TRANSPARENT_PNG;
 
-        const pngBuffer = await sharp(Buffer.from(buf)).png().toBuffer();
+        const img = sharp(Buffer.from(buf));
+        const pngBuffer = await (fitSize ? img.resize(fitSize, fitSize, { fit: 'cover' }) : img).png().toBuffer();
         console.log('[VMD] 이미지 변환:', buf.byteLength, '->', pngBuffer.byteLength);
         return `data:image/png;base64,${pngBuffer.toString('base64')}`;
       } catch (e: any) {
@@ -124,42 +130,44 @@ export async function POST(req: Request) {
       }
     };
 
-    const rawThumb = (product.thumbnailImage || '').trim();
-    // data: URL (사용자가 모달에서 직접 업로드한 이미지) — 변환 없이 그대로 사용
-    const isThumbDataUrl = rawThumb.startsWith('data:');
-    let thumbUrl: string;
-    if (isThumbDataUrl) {
-      thumbUrl = rawThumb;
-    } else if (/^https?:\/\//i.test(rawThumb)) {
-      // Cafe24 lookup으로 들어온 절대 URL (detail_image / list_image)
-      thumbUrl = rawThumb;
-    } else {
-      // 기존 FTP 폴백: 상품명.jpg
-      const cleaned = rawThumb.replace(/^\/+/, '');
+    // 썸네일 / 원형 이미지 주소 → base64
+    //   data: URL (사용자가 모달에서 직접 업로드한 이미지) — 변환 없이 그대로 사용
+    //   절대 URL (Cafe24 lookup 의 detail_image 등) — 그대로 fetch
+    //   파일명 — FTP 폴백 (/web/vmd/파일명)
+    const loadImage = (raw: string, fitSize?: number) => {
+      const src = (raw || '').trim();
+      if (src.startsWith('data:')) return Promise.resolve(src);
+      if (/^https?:\/\//i.test(src)) return fetchBase64(src, fitSize);
+      const cleaned = src.replace(/^\/+/, '');
       const nameParts = cleaned.split('.');
       const ext = nameParts.pop();
       const encodedFileName = nameParts.map((p: string) => encodeURIComponent(p)).join('.') + (ext ? `.${ext}` : '');
-      thumbUrl = `https://yogibo.openhost.cafe24.com/web/vmd/${encodedFileName}`;
-    }
-    const logoUrl = "https://yogibo.openhost.cafe24.com/web/img/icon/logo3_on.png";
-
+      return fetchBase64(`https://yogibo.openhost.cafe24.com/web/vmd/${encodedFileName}`, fitSize);
+    };
     const rate = product.discountRate || 0;
     const supported = [10, 15, 20];
     const exact = supported.find((r: number) => r === rate);
     const saleBadgeUrl = exact ? `https://yogibo.openhost.cafe24.com/web/vmd/${exact}.png` : null;
 
-    console.log('[VMD] 이미지 다운로드:', { isThumbDataUrl, logoUrl, saleBadgeUrl });
+    // 원형 이미지 (리필 비즈) — 상품명으로 코드에서 찾음
+    const circle = getCircleImage(product.name);
+    console.log('[VMD] 이미지 다운로드:', { saleBadgeUrl, circle: circle?.image });
 
-    const results = await Promise.all([
-      // data: URL 이면 fetch 불필요 — 그대로 전달 (이미 base64)
-      isThumbDataUrl ? Promise.resolve(thumbUrl) : fetchBase64(thumbUrl),
-      fetchBase64(logoUrl),
-      saleBadgeUrl ? fetchBase64(saleBadgeUrl) : Promise.resolve(null)
+    // 로고는 일반 / 흰색 둘 다 받아 두고, 썸네일 로고 자리 밝기로 고름 (둘 다 작은 파일)
+    const [thumb, logo, logoWhite, badge, circleImg] = await Promise.all([
+      loadImage(product.thumbnailImage),
+      fetchBase64(LOGO_URL),
+      fetchBase64(LOGO_WHITE_URL),
+      saleBadgeUrl ? fetchBase64(saleBadgeUrl) : Promise.resolve(null),
+      circle ? loadImage(circle.image, CIRCLE_IMAGE_PX) : Promise.resolve(null),
     ]);
+    const tone = await logoAreaTone(Buffer.from(thumb.slice(thumb.indexOf(',') + 1), 'base64')).catch(() => null);
+    console.log('[VMD] 로고 자리 밝기:', tone?.brightness.toFixed(2), tone?.white ? '→ 흰 로고' : '');
 
-    product._base64Thumb = results[0];
-    product._base64Logo = results[1];
-    product._base64Badge = results[2];
+    product._base64Thumb = thumb;
+    product._base64Logo = tone?.white ? logoWhite : logo;
+    product._base64Badge = badge;
+    product._base64Circle = circleImg;
     product._base64ColorChips = [];
 
     const host = req.headers.get('host') || 'localhost:3000';
@@ -178,9 +186,10 @@ export async function POST(req: Request) {
     }
 
     // 커스텀 사이즈: satori 는 transform: scale() 을 쓰면 클리핑/레이아웃이 깨지므로
-    // A타입(1984×803)을 원본 크기로 렌더한 뒤 sharp 로 목표 사이즈에 맞춰(contain) 리사이즈.
+    // 비율이 가까운 A·B 디자인(customBaseType)을 원본 크기로 렌더한 뒤 sharp 로 목표 사이즈에 맞춰(contain) 리사이즈.
     const isCustom = autoFit || (resolvedType !== 'A' && resolvedType !== 'B');
-    const element = isCustom || resolvedType === 'A'
+    const baseType = isCustom ? customBaseType(width, height) : resolvedType;
+    const element = baseType === 'A'
       ? <TypeAPreview product={product} />
       : <TypeBPreview product={product} />;
 
@@ -201,8 +210,8 @@ export async function POST(req: Request) {
     const fonts = fontsConfig.length > 0 ? fontsConfig : undefined;
 
     if (isCustom) {
-      const REF_W = 1984, REF_H = 803;
-      console.log('[VMD] 커스텀 렌더...', { width, height, fontsCount: fontsConfig.length });
+      const { width: REF_W, height: REF_H } = IMAGE_SPECS[baseType ?? 'A'];
+      console.log('[VMD] 커스텀 렌더...', { width, height, baseType, fontsCount: fontsConfig.length });
       const base = await new ImageResponse(element, { width: REF_W, height: REF_H, fonts }).arrayBuffer();
       const png = await sharp(Buffer.from(base))
         .resize(width, height, {

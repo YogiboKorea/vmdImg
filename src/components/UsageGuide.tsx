@@ -119,12 +119,12 @@ export default function UsageGuide() {
           {/* 1. 엑셀 파일 형식 */}
           <Section title="① 엑셀 파일 형식">
             <Step n={1} title="컬럼 순서 (헤더 자동 감지)">
-              아래 7개 컬럼이 한 줄에 있어야 합니다. <b>A열이 비어있어도</b> 헤더에 &quot;상품명&quot; 이 있는 행을 자동 인식합니다.
+              아래 8개 컬럼이 한 줄에 있어야 합니다. <b>A열이 비어있어도</b> 헤더에 &quot;상품명&quot; 이 있는 행을 자동 인식합니다.
               <div style={{
                 marginTop: 8, padding: 10, background: 'white', border: '1px solid #E5E7EB', borderRadius: 8,
                 fontSize: 12, color: '#374151', overflowX: 'auto', whiteSpace: 'nowrap',
               }}>
-                <code>상품명</code> · <code>서브 타이틀</code> · <code>상품 설명</code> · <code>색상(슬래시 / 로 구분)</code> · <code>정상가</code> · <code>할인가</code> · <code>할인율(%)</code>
+                <code>상품명</code> · <code>서브 타이틀</code> · <code>상품 설명</code> · <code>색상(슬래시 / 로 구분)</code> · <code>비즈</code> · <code>정상가</code> · <code>할인가</code> · <code>할인율(%)</code>
               </div>
             </Step>
             <Step n={2} title="색상 컬럼 작성">
@@ -135,6 +135,28 @@ export default function UsageGuide() {
               }}>
                 <code>로즈 핑크 / 스위트 오렌지 / 올리브 그린 / 아쿠아 블루</code>
               </div>
+            </Step>
+            <Step n={3} title="비즈 컬럼 작성 — 비즈별 가격을 가격표 1장으로">
+              비즈마다 한 행씩 쓰고 <b>상품명을 똑같이</b> 적으면 가격표 1장에 S · P · P+ 가격 줄로 합쳐집니다.
+              서브타이틀 · 상품설명 · 색상은 첫 행에만 적어도 됩니다.
+              <div style={{
+                marginTop: 8, padding: 10, background: 'white', border: '1px solid #E5E7EB', borderRadius: 8,
+                fontSize: 12, color: '#374151', overflowX: 'auto', whiteSpace: 'nowrap', lineHeight: 1.8,
+              }}>
+                <code>카터필러 롤 맥스</code> · … · <code>스탠다드</code> · <code>199000</code> · <code>179100</code> · <code>10</code><br />
+                <code>카터필러 롤 맥스</code> · (빈칸) · <code>프리미엄</code> · <code>299000</code> · <code>269100</code> · <code>10</code><br />
+                <code>카터필러 롤 맥스</code> · (빈칸) · <code>프리미엄 플러스</code> · <code>399000</code> · <code>359100</code> · <code>10</code>
+              </div>
+              <ul style={{ marginTop: 8, paddingLeft: 18, lineHeight: 1.7 }}>
+                <li>비즈 값: <code>스탠다드</code> / <code>프리미엄</code> / <code>프리미엄 플러스</code> (또는 <code>S</code> / <code>P</code> / <code>P+</code>)</li>
+                <li>비즈가 없는 상품(냅, 코지보 등)은 비즈 칸을 비워 두면 기존처럼 가격 1줄로 나옵니다.</li>
+                <li>비즈별 할인율이 다르면 SALE 배지에는 가장 큰 할인율이 표시됩니다.</li>
+                <li>리필 비즈처럼 용량이 옵션이면 비즈 칸에 <code>0.4kg</code> / <code>0.75kg</code> 처럼 숫자로 적으면 아이콘 대신 그 글자로 표시됩니다 (엑셀 순서대로).</li>
+              </ul>
+            </Step>
+            <Step n={4} title="원형 이미지 — 리필 비즈 자동">
+              상품명이 <b>스탠다드 리필 비즈 · 프리미엄 리필 비즈</b>이면 엑셀에 따로 적지 않아도
+              썸네일 오른쪽 위에 비즈 원형 이미지가 자동으로 들어갑니다 (컬러칩 이미지처럼 상품명으로 인식).
             </Step>
           </Section>
 
@@ -222,7 +244,7 @@ export default function UsageGuide() {
                 <li><b style={{ color: '#E8192C' }}>A타입</b> — 1984×803 PNG</li>
                 <li><b style={{ color: '#111827' }}>B타입</b> — 1984×602 PNG</li>
                 <li><b style={{ color: '#16A34A' }}>전체 (A+B)</b> — 두 타입 한 번에</li>
-                <li><b style={{ color: '#6D28D9' }}>커스텀</b> — W/H 직접 입력. Figma 비율 유지하며 비례 축소(autoFit)</li>
+                <li><b style={{ color: '#6D28D9' }}>커스텀</b> — W/H 직접 입력. 비율이 가까운 A·B타입 디자인을 골라 비율 유지하며 맞춤 (예: 2055×673 → B타입)</li>
               </ul>
             </Step>
             <Step n={2} title="전체 상품 일괄 다운로드 (섹션 2 헤더 우측)">

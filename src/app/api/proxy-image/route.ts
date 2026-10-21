@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import sharp from 'sharp';
 
 // 1x1 투명 PNG (base64 디코드된 Uint8Array)
 const TRANSPARENT_PNG = Uint8Array.from(
@@ -16,6 +17,8 @@ function transparentResponse(extraStatus?: number) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
+  // w: 지정하면 w×w 정사각(cover)으로 줄여서 보냄 — 원본이 큰 원형 이미지 미리보기용
+  const width = Number(searchParams.get('w')) || 0;
 
   if (!url) {
     return new NextResponse('Missing url parameter', { status: 400 });
@@ -40,6 +43,12 @@ export async function GET(request: Request) {
     }
 
     const arrayBuffer = await res.arrayBuffer();
+    if (width > 0) {
+      const resized = await sharp(Buffer.from(arrayBuffer)).resize(width, width, { fit: 'cover' }).png().toBuffer();
+      return new NextResponse(new Uint8Array(resized), {
+        headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400, immutable' },
+      });
+    }
     return new NextResponse(arrayBuffer, {
       headers: {
         'Content-Type': contentType,

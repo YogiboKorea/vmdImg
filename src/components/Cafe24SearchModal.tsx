@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Cafe24Product, searchProducts, getProductDetail } from '@/lib/cafe24Lookup';
+import { Cafe24Product, searchProducts, getProductImage } from '@/lib/cafe24Lookup';
 
 interface Props {
   open: boolean;
@@ -73,11 +73,10 @@ export default function Cafe24SearchModal({ open, initialQuery, onClose, onPick 
   const handlePick = async (prod: Cafe24Product) => {
     setPicking(prod.product_no);
     try {
-      // /products/all 응답에 detail_image가 이미 포함되어 있으면 단건 조회 생략
+      // 키워드 검색 결과는 detail_image 포함, 전체 상품명 목록에서 온 결과는 이미지를 따로 조회
       let imageUrl = prod.detail_image || prod.image_medium || prod.list_image || '';
       if (!imageUrl) {
-        const detail = await getProductDetail(prod.product_no).catch(() => null);
-        imageUrl = detail?.detail_image || detail?.list_image || '';
+        imageUrl = await getProductImage(prod).catch(() => '');
       }
       if (!imageUrl) {
         setError('이 상품은 등록된 이미지가 없습니다.');

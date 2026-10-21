@@ -11,12 +11,26 @@ import Cafe24SearchModal from '@/components/Cafe24SearchModal';
 import UsageGuide from '@/components/UsageGuide';
 import { lookupManyByName } from '@/lib/cafe24Lookup';
 
-/** 업로드 양식 xlsx 생성·다운로드 — 헤더 + 예시 2행 */
+/** 업로드 양식 xlsx 생성·다운로드 — 헤더 + 예시 (비즈 3개 상품 = 3행, 비즈 2개 상품 = 2행, 비즈 없는 상품 3개(색상 많은 메이트 포함), 리필 비즈 2종 = 각 2행) */
 function downloadTemplate() {
-  const headers = ['상품명', '서브 타이틀', '상품 설명', '색상', '정상가', '할인가', '할인율(%)'];
+  const headers = ['상품명', '서브 타이틀', '상품 설명', '색상', '비즈', '정상가', '할인가', '할인율(%)'];
   const samples = [
-    ['냅', 'NAP / 인체공학 목베개', '목을 부드럽게 감싸주고 포근함을 더해주는\n스냅 버튼으로 고정이 가능', '로즈 핑크/스위트 오렌지/올리브 그린/아쿠아 블루', 34800, 34800, 0],
-    ['코지보', 'COZYBO / 사계절 담요', 'Yogibo만의 독자적인 섬유 엔지니어링 기술로 만들어진\n부드러운 소재감과 적당한 두께감의 사계절 담요', '체리 레드/아쿠아 블루/올리브 그린', 139000, 118150, 15],
+    ['카터필러 롤 맥스', 'CATERPILLAR ROLL MAX / 바디필로우', '휴식과 숙면을 채우는 바디필로우', '아쿠아 블루/다크 그레이', '스탠다드', 199000, 179100, 10],
+    ['카터필러 롤 맥스', '', '', '', '프리미엄', 299000, 269100, 10],
+    ['카터필러 롤 맥스', '', '', '', '프리미엄 플러스', 399000, 359100, 10],
+    ['메가 문 필로우', 'MEGA MOON PILLOW / 반달형 메가 쿠션', '침대, 소파 등에서 달 모양 인체공학적 곡선이\n우주급 편안하고 안정감을 주는 사이즈 업 쿠션', '아쿠아 블루/올리브 그린/다크 그레이/라이트 그레이', '스탠다드', 124000, 99200, 20],
+    ['메가 문 필로우', '', '', '', '프리미엄', 174000, 139200, 20],
+    ['냅', 'NAP / 인체공학 목베개', '목을 부드럽게 감싸주고 포근함을 더해주는\n스냅 버튼으로 고정이 가능', '로즈 핑크/스위트 오렌지/올리브 그린/아쿠아 블루', '', 34800, 34800, 0],
+    ['코지보', 'COZYBO / 사계절 담요', 'Yogibo만의 독자적인 섬유 엔지니어링 기술로 만들어진\n부드러운 소재감과 적당한 두께감의 사계절 담요', '체리 레드/아쿠아 블루/올리브 그린', '', 139000, 118150, 15],
+    // 색상이 많은 예시 — 메이트 캐릭터 이미지 칩 26개 (설명 문구는 예시용)
+    ['메이트', 'MATE / 캐릭터 쿠션', '언제 어디서나 함께하는 귀여운 캐릭터 쿠션', [
+      '테디', '유니크', '오스왈드', '딜라일라', '버트랜드', '어니스트', '오파', '조젯', '디포', '모리슨', '데릭', '디오고', '케빈',
+      '셸비', '펄', '지그프리트', '휴고', '로미', '다니엘', '야머스', '페스터스', '칼리스타', '코스모', '사울', '우파루파', '나르왈',
+    ].map((c) => `메이트_${c}`).join('/'), '', 43800, 39420, 10],
+    ['스탠다드 리필 비즈', 'STANDARD REFILL BEADS / 충전용 스탠다드 비즈', '전세계적으로 사용되는 비즈로써 부드러운 느낌과\n트랜스 포밍 기능에 최적화된 충전재', '', '0.4kg', 25800, 23220, 10],
+    ['스탠다드 리필 비즈', '', '', '', '0.75kg', 34800, 31320, 10],
+    ['프리미엄 리필 비즈', 'PREMIUM REFILL BEADS / 충전용 프리미엄 비즈', '전세계적으로 사용되는 비즈로써 부드러운 느낌과\n트랜스 포밍 기능에 최적화된 충전재', '', '0.3kg', 25800, 23220, 10],
+    ['프리미엄 리필 비즈', '', '', '', '0.5kg', 34800, 31320, 10],
   ];
   const ws = XLSX.utils.aoa_to_sheet([headers, ...samples]);
   ws['!cols'] = [
@@ -24,6 +38,7 @@ function downloadTemplate() {
     { width: 28 }, // 서브 타이틀
     { width: 50 }, // 상품 설명
     { width: 36 }, // 색상
+    { width: 16 }, // 비즈
     { width: 12 }, // 정상가
     { width: 12 }, // 할인가
     { width: 10 }, // 할인율
@@ -129,9 +144,30 @@ export default function HomePage() {
   const [customW, setCustomW] = useState<number>(2055);
   const [customH, setCustomH] = useState<number>(673);
 
+  // 썸네일별 로고 색 (미리보기용) — 로고 자리가 어두우면 흰 로고. 다운로드는 서버가 같은 기준으로 다시 판단.
+  const [logoWhiteByThumb, setLogoWhiteByThumb] = useState<Record<string, boolean>>({});
+  const logoToneRequested = useRef(new Set<string>());
+  useEffect(() => {
+    const pending = Array.from(new Set(products.map(p => p.thumbnailImage)))
+      .filter(src => src && !logoToneRequested.current.has(src));
+    for (const src of pending) {
+      logoToneRequested.current.add(src);
+      fetch('/api/logo-tone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ src }),
+      })
+        .then(res => res.json())
+        .then((tone: { white?: boolean }) => setLogoWhiteByThumb(prev => ({ ...prev, [src]: !!tone.white })))
+        .catch(() => {});
+    }
+  }, [products]);
+
   const groupedNames = Array.from(new Set(products.map(p => p.name)));
   const currentName = groupedNames[selectedIndex] ?? null;
-  const currentProducts = products.filter(p => p.name === currentName);
+  const currentProducts = products
+    .filter(p => p.name === currentName)
+    .map(p => ({ ...p, logoWhite: logoWhiteByThumb[p.thumbnailImage] }));
 
   const runLookup = useCallback(async (parsed: ProductData[]) => {
     const names = Array.from(new Set(parsed.map(p => p.name)));
@@ -315,7 +351,9 @@ export default function HomePage() {
                 엑셀 파일 업로드
               </h2>
               <p style={{ marginTop: 6, marginLeft: 36, fontSize: 13, color: '#999' }}>
-                상품명 · 서브타이틀 · 상품설명 · 색상(슬래시구분) · 정상가 · 할인가 · 할인율(%) 순으로 작성된 xlsx 파일
+                상품명 · 서브타이틀 · 상품설명 · 색상(슬래시구분) · 비즈 · 정상가 · 할인가 · 할인율(%) 순으로 작성된 xlsx 파일
+                <br />
+                비즈(스탠다드/프리미엄/프리미엄 플러스 또는 0.4kg 같은 용량)가 적힌 행은 같은 상품명끼리 가격표 1장으로 합쳐집니다.
               </p>
             </div>
             <button
@@ -331,7 +369,7 @@ export default function HomePage() {
               }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E8192C'; e.currentTarget.style.color = '#E8192C'; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#374151'; }}
-              title="작성용 빈 양식 (헤더 + 예시 2행) 다운로드"
+              title="작성용 양식 (헤더 + 예시) 다운로드"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
