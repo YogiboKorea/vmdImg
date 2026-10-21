@@ -1,6 +1,6 @@
 import { ProductData, BeadType, BeadPrice, IMAGE_SPECS, customBaseType } from '@/types/product';
 import { getCircleImage, CIRCLE_IMAGE_PX } from '@/lib/circleImages';
-import { LOGO_URL, LOGO_WHITE_URL } from '@/lib/logo';
+import { LOGO_URL, LOGO_WHITE_URL, showsLogo } from '@/lib/logo';
 
 export function imgUrl(filename: string): string {
   if (!filename) return '';
@@ -123,13 +123,22 @@ export const IMAGE_CHIP_NAMES: string[] = [
   // 하트필로우
   '하트필로우_체리레드',
   '하트필로우_로즈핑크',
+  // 레인보우 · 뉴트럴 (카터필러 롤 맥스 등) — 파일명 '뉴트랄', 색 이름 '뉴트럴' 은 IMAGE_CHIP_ALIASES 로 연결
+  '레인보우',
+  '뉴트랄',
 ];
+
+// 색 이름 → 이미지 칩 파일명이 다른 경우 (공백 제거한 이름 기준)
+const IMAGE_CHIP_ALIASES: Record<string, string> = {
+  '뉴트럴': '뉴트랄',
+};
 
 function getColor(name: string): string {
   const norm = name.replace(/\s+/g, '');
 
   // 1) 이미지 기반 chip 우선 매칭 — cafe24 /web/img/goods/color_chip/{이름}.png
-  const imgChipMatch = IMAGE_CHIP_NAMES.find(n => n.replace(/\s+/g, '') === norm);
+  const chipName = IMAGE_CHIP_ALIASES[norm] ?? norm;
+  const imgChipMatch = IMAGE_CHIP_NAMES.find(n => n.replace(/\s+/g, '') === chipName);
   if (imgChipMatch) {
     // 한국어/공백 포함 파일명을 URL 안전하게 인코딩
     const encoded = encodeURIComponent(imgChipMatch);
@@ -417,13 +426,14 @@ type BeadPriceStyle = BeadSpec['regular'];
 
 // B타입 비즈 2개 (예: S·P) — 2026-10-21 디자인 (롤 메이트 시안). 줄 간격을 넓히고, 할인 시 할인가 아래에 취소선 정상가를 쌓음.
 // 디자인 수치: 가격 80/80 · 취소선 50/60 모두 자간 -4%, 가격 박스 사이 78, 아이콘 → 가격 30.
-// 시안 캡처 측정값(±4px): 첫 구분선 267, 할인가 박스 위 = 구분선 + 3 (숫자 윗선이 아이콘 윗선과 맞음), 취소선 박스 위 = 구분선 + 76.
+// 시안 캡처 측정값(±4px): 첫 구분선 267, 할인가 박스 위 = 구분선 + 3 (숫자 윗선이 아이콘 윗선과 맞음).
+// 취소선 박스 위 = 구분선 + 88 (시안 76 → 할인가 쉼표가 취소선에 닿는다는 피드백으로 12 내림).
 const B_BEAD2_SPEC: BeadSpec = {
   ...B_BEAD_SPEC,
   rows: 2,
   stacked: true,
   saleTop: 3,
-  strikeTop: 76,
+  strikeTop: 88,
   firstLineY: 267,
   rowPitch: 158, // 가격 박스 80 + 박스 사이 78
   minWidthSale: 0, // 폭은 내용에 맞춤 (아이콘 + 30 + 가장 긴 가격)
@@ -545,7 +555,7 @@ function ThumbnailBlock({
             borderRadius: `0px ${radius}px 0px 0px`,
           }} />
       )}
-      {logoUrl && (
+      {logoUrl && showsLogo(product.name) && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={logoUrl} alt="yogibo"
           style={{

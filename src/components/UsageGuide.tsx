@@ -73,6 +73,7 @@ export default function UsageGuide() {
       name.startsWith('메이트_플랜트') ? '메이트 플랜트' :
       name.startsWith('롤메이트') ? '롤메이트' :
       name.startsWith('하트필로우') ? '하트필로우' :
+      name === '레인보우' || name === '뉴트랄' ? '레인보우 · 뉴트럴' :
       '메이트';
     if (!groups[prefix]) groups[prefix] = [];
     groups[prefix].push(name);
